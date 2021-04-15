@@ -1,0 +1,168 @@
+---
+title: "final_gov_project"
+author: "Shai-Li Ron"
+date: "4/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(primer.data)
+library(rstanarm)
+library(readxl)
+library(lubridate)
+library(ggthemes)
+library(patchwork)
+library(ggplot2)
+library(hrbrthemes)
+
+```
+
+
+# Method:
+This project examines the Covid 19 situation in Israel, a world leading nation in the percentage of vaccinated individuals.
+We are going to ask the following questions:
+1) what is the relationship between the percentage of vaccinated individuals per city and the number of active cases?
+2) What is the relationship between socio-economic status of a city and vaccination rate?
+3) what is the relationship between minority populations and vaccination rates?
+
+
+# Percentage vaccinate vs active cases - total Israel
+```{r}
+# First I loaded new case data, by date. 
+new_cases <- read_excel(path = "Raw_data/new_covid_cases.xlsx") 
+
+# Next I loaded vaccinated data, by date. 
+total_vac <- read_excel(path = "Raw_data/number_vaccinated.xlsx") 
+```
+
+```{r}
+# I then needed to join the two data sets. I plan to do this by date. I chose to
+# begin with the new_case data as that was happening before the vaccine rates.
+
+total_case_vax <- new_cases %>% 
+  left_join(total_vac, by = "date") %>% 
+
+# It makes sense that we are getting NA values, as vaccination only started a
+# long time after the cases started.
+  
+  select(date, new_cases, first_dose, second_dose) %>% 
+  separate(col = date,
+          into = c("day", "month", "year"),
+          sep = "-") %>% 
+  mutate(date = make_date(year, month, day)) %>% 
+  select(date, new_cases, first_dose, second_dose)  
+
+# First I needed to separate the original date type I had (EU, Israel type),
+# then I used make date from the lubridate library to make a proper date that R
+# can use.
+
+vax_plot <- total_case_vax %>% 
+  # filter(date > as.Date("2020-12-01")) %>% 
+     pivot_longer(cols = c(first_dose, second_dose), 
+               names_to = "type", values_to = "value") %>% 
+  ggplot(aes(x = date,
+             y = value,
+             color = type)) + 
+  geom_line() +
+  theme_fivethirtyeight() +
+  scale_y_continuous(labels = scales::number_format(accuracy = 100)) +
+  labs(title = "Number of Israelis Vaccinated: First and Second Dose",
+       x = "Date",
+       y = "Number of Vaccinatated") +
+  geom_label(x=as.Date("2020-12-19"), y = -100, 
+             label = "First Vaccines", color = "black", size = 2) +
+  geom_label(x=as.Date("2021-03-19"), y = 4526000, 
+             label = "50% of Population Vaccinated", color = "black", size = 2) +
+  scale_color_discrete(name = " ", labels = c("First Dose", "Second Dose"))
+  
+# FIX Y-axis  
+# Why are my x and y axis not showing?
+```
+
+
+```{r}
+new_case_plot <- total_case_vax %>% 
+  ggplot(aes(x = date,
+             y = new_cases)) + 
+  geom_line() +
+  labs(title = "Number of New Covid Cases",
+       x = "Date",
+       y = "Number of Vaccinatated") +
+  theme_fivethirtyeight() 
+
+```
+
+
+```{r}
+new_case_plot / vax_plot +
+  plot_annotation(title = "Number of New Covid Cases and Vaccinated in Israel",
+                  subtitle = "New Covid Cases Decreased when Vaccination Rate Increased",
+                  caption = "Source: Israel Ministry of Health") &
+  coord_cartesian(ylim = c(0, .035))
+
+
+```
+
+```{r}
+# Trying to plot this with two different axis
+
+coeff <- 100
+temperatureColor <- "#69b3a2"
+priceColor <- rgb(0.2, 0.6, 0.9, 1)
+black <- "#000000"
+
+total_case_vax %>% 
+     pivot_longer(cols = c(first_dose, second_dose), 
+               names_to = "type", values_to = "vax") %>% 
+  filter(date > as.Date("2020-06-01")) %>% 
+  ggplot(aes(x = date, color = type)) +
+  geom_line(aes(y=vax/coeff), size=1) + 
+  geom_line( aes(y=new_cases), size=1, color=priceColor) +
+  
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = "New Covid Cases",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~.*coeff, name="Number of Vaccinated Israelis")
+  ) + 
+  
+  theme_ipsum() +
+
+  theme(
+    axis.title.y = element_text(color = priceColor, size=10),
+    axis.title.y.right = element_text(color = black, size=10)
+  ) +
+
+  labs(title = "New Covid Cases and Vaccination in Israel",
+       subtitle = "New Covid Cases Decreased when Vaccination Rate Increased",
+       caption = "Source: Israel Ministry of Health",
+       x = "Date") +
+  scale_color_discrete(name = " ", labels = c("First Dose", "Second Dose")) +
+  geom_label(x=as.Date("2020-12-19"), y = -10, 
+             label = "First Vaccines", color = "black", size = 2) +
+  geom_label(x=as.Date("2021-03-19"), y = 45260, 
+             label = "50% Vaccinated", color = "black", size = 2)
+  
+
+# FIX AXIS 
+# Try to add color of line in the same as first dose and second dose.
+```
+
+# Percetange vaccinated vs. Active cases - by city
+```{r}
+# The first data set we will look at is the most recent data set for the percentage of vaccinated per city. 
+# Loading vaccinated by city
+by_city <- read_excel(path = "Raw_data/total_bycity.xls") 
+
+```
+
+```{r}
+
+by_city %>% 
+  clean_names()
+```
