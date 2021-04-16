@@ -17,6 +17,7 @@ library(ggthemes)
 library(patchwork)
 library(ggplot2)
 library(hrbrthemes)
+library(ggdist)
 
 ```
 
@@ -157,12 +158,148 @@ total_case_vax %>%
 ```{r}
 # The first data set we will look at is the most recent data set for the percentage of vaccinated per city. 
 # Loading vaccinated by city
-by_city <- read_excel(path = "Raw_data/total_bycity.xls") 
+vax_by_city_age <- read_excel(path = "Raw_data/total_bycity.xls") 
+perc_vax_city <- read_excel(path = "raw_data/perc_city.xlsx")
+city_econ <- read_excel(path = "raw_data/econ_status_city.xlsx")
 
 ```
 
 ```{r}
 
-by_city %>% 
-  clean_names()
+vax_by_city_age %>% 
+  clean_names() %>% 
+  mutate_at(vars(-c("city")), as.numeric) %>%  
+  
+# Any indefinite value of <15 was ignored - replaced by NA
+  
+  group_by(city) %>%
+  mutate(total = sum(x16_19, x20_29, x30_39, x40_49, x50_59, x60_69, x70_79, x80_89, x90))
+
 ```
+
+# active_per_10000 vs. percent vaccinated
+```{r}
+perc_vax_city %>% 
+   mutate_at(vars(-c("city")), as.numeric) %>% 
+   arrange(perc_first_dose) %>% 
+
+# Had to make these vectors numeric so I could manipulate them.
+# We chose to look at second dose - as this is what matters for being fully vaccinated.
+
+  select(city, perc_second_dose, active_per_10000) %>% 
+  ggplot(aes(x = perc_second_dose, 
+             y = active_per_10000)) +
+  geom_point() +
+  geom_smooth(method = "lm", 
+              formula = y ~ x) +
+  labs(title = "Relationship between Active Cases per 10,000 People and Vaccination Percentage In Cities",
+       subtitle = "A negative relationship exists between active cases and vaccination percentage",
+       x = "Percent Vaccinated Second Dose in Given City",
+       y = "Number of Active Cases per 10,000 People in Given City",
+       caption = "Source: Israel Health Ministry") +
+    theme_gray()
+
+
+```
+
+
+```{r}
+clean_perc_vax_city <- perc_vax_city %>% 
+   mutate_at(vars(-c("city")), as.numeric)  
+
+  
+```
+
+
+```{r}
+vax_econ_clean <- city_econ %>% 
+  clean_names() %>% 
+  group_by(city) %>% 
+  full_join(clean_perc_vax_city, by = "city") %>% 
+  mutate("rank2017" = as.numeric(cluster_2017_4))
+
+vax_econ_clean
+
+vax_econ_clean %>% 
+  select(city, rank2017, city_rank, perc_second_dose, active_per_10000) %>% 
+  ggplot(aes(x = rank2017, 
+             y = perc_second_dose,
+             colour = city_rank)) +
+  geom_point() +
+  scale_x_continuous(labels = scales::number_format(accuracy = 1), breaks = 0:10) +
+  labs(title = "Relationship Between City's Socioeconomic Rank and Vaccination Percentage",
+       subtitle = "Cities with a higher socio-economic status have a higher vaccination percentages",
+       x = "City Socio-Economic Rank (2017)",
+       y = "Percentage Vaccinated (Second Dose)",
+       caption = "Source: Israel Health Ministry") +
+  geom_smooth(method = "lm", 
+              formula = y ~ x) +
+  scale_color_gradient(low="blue", high="red") 
+                      
+
+```
+
+# Predictive Model 
+```{r}
+
+fit_1 <- stan_glm(data = vax_econ_clean, 
+                    formula = perc_second_dose ~ rank2017, 
+                    family = gaussian, 
+                    refresh = 0,
+                    seed = 9)
+fit_1 %>% 
+   as_tibble() %>% 
+  rename(mu = `(Intercept)`) %>% 
+  ggplot(aes(x = mu)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))), 
+                   bins = 100) +
+    labs(title = "Posterior Distribution for Percentage of Vaccinated",
+         subtitle = "The model predicts around 32% vaccinated in any randomly selected city",
+         x = "Percent Vaccinated Second Dose",
+         y = "Probability",
+         caption = "Data source: Israel Health Ministry") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    theme_classic()
+
+```
+
+```{r}
+# What would be the percentage vaccinated in 10 cities of different socio-economic status? 
+
+newobs <- tibble(rank2017 = 1:10)
+
+pp_10 <- posterior_predict(fit_1, newdata = newobs) %>%
+    as_tibble() 
+
+pp_10 %>%
+  pivot_longer(cols = `1` : `10`,
+               names_to = "status",
+               values_to = "perc_vax") %>% 
+
+# We need a single row for the status and another one for the perc_vax.
+
+  ggplot(aes(x = perc_vax, y = fact_reorder(status, perc_vax)) +
+      stat_halfeye(aes(fill = stat(cut_cdf_qi(cdf, .width = c(0.95, 1)))),
+               show.legend = FALSE) +
+  scale_fill_calc() +
+  labs(title = "Posterior for Percentage Vaccinated in Cities of Different Socio-Economic Status",
+       x = "Percent of Vaccinated in City",
+       y = "Socio-Economic Status",
+       caption = "Source: Israel Heatlh Ministry")
+    
+```
+
+```{r}
+pp_10 %>%
+  clean_names() %>% 
+  pivot_longer(cols = x1:x10,
+               names_to = "status",
+               values_to = "perc_vax") %>% 
+
+# We need a single row for the status and another one for the perc_vax.
+
+  ggplot(aes(x = perc_vax, y = status)) +
+  stat_slab(position = "dodge") +
+  guides(alpha = FALSE) 
+```
+
