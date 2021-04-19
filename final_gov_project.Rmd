@@ -206,8 +206,6 @@ perc_vax_city %>%
 ```{r}
 clean_perc_vax_city <- perc_vax_city %>% 
    mutate_at(vars(-c("city")), as.numeric)  
-
-  
 ```
 
 
@@ -218,13 +216,11 @@ vax_econ_clean <- city_econ %>%
   full_join(clean_perc_vax_city, by = "city") %>% 
   mutate("rank2017" = as.numeric(cluster_2017_4))
 
-vax_econ_clean
 
 vax_econ_clean %>% 
   select(city, rank2017, city_rank, perc_second_dose, active_per_10000) %>% 
   ggplot(aes(x = rank2017, 
-             y = perc_second_dose,
-             colour = city_rank)) +
+             y = perc_second_dose)) +
   geom_point() +
   scale_x_continuous(labels = scales::number_format(accuracy = 1), breaks = 0:10) +
   labs(title = "Relationship Between City's Socioeconomic Rank and Vaccination Percentage",
@@ -239,7 +235,7 @@ vax_econ_clean %>%
 
 ```
 
-# Predictive Model 
+# Predictive Model: Percent vaccinated in relation to socio economic rank
 ```{r}
 
 fit_1 <- stan_glm(data = vax_econ_clean, 
@@ -278,28 +274,40 @@ pp_10 %>%
 
 # We need a single row for the status and another one for the perc_vax.
 
-  ggplot(aes(x = perc_vax, y = fact_reorder(status, perc_vax)) +
+  ggplot(aes(x = perc_vax, y = fct_reorder(status, perc_vax))) +
       stat_halfeye(aes(fill = stat(cut_cdf_qi(cdf, .width = c(0.95, 1)))),
                show.legend = FALSE) +
   scale_fill_calc() +
   labs(title = "Posterior for Percentage Vaccinated in Cities of Different Socio-Economic Status",
+       subtitle = "Cities of higher socio-economic Status have higher vaccination percentages",
        x = "Percent of Vaccinated in City",
-       y = "Socio-Economic Status",
-       caption = "Source: Israel Heatlh Ministry")
+       y = "Socio-Economic Status of City",
+       caption = "Source: Israel Heatlh Ministry") +
+  scale_x_continuous(breaks = c(0,10,20,30,40,50,60,70,80,90,100))
     
 ```
-
+# Fit 2: predicting active covid cases by city second dose vaccination rates and socio-econ rank
 ```{r}
-pp_10 %>%
-  clean_names() %>% 
-  pivot_longer(cols = x1:x10,
-               names_to = "status",
-               values_to = "perc_vax") %>% 
+city_econ_clean <- city_econ %>% 
+  clean_names() 
 
-# We need a single row for the status and another one for the perc_vax.
+# Fit_2 needs organized data for the different districts socio-econ status and the vaccination percentage.
 
-  ggplot(aes(x = perc_vax, y = status)) +
-  stat_slab(position = "dodge") +
-  guides(alpha = FALSE) 
+data_fit_2 <- clean_perc_vax_city %>%
+  select(city, active_per_10000, perc_second_dose) %>% 
+  drop_na() %>% 
+  group_by(city) %>% 
+  full_join(city_econ_clean, by = "city") %>% 
+  select(city, active_per_10000, perc_second_dose, rank_2017_3) %>% 
+  drop_na()
+
+fit_2 <- stan_glm(data = data_fit_2, 
+                    formula = active_per_10000 ~  perc_second_dose + rank_2017_3, 
+                    family = gaussian, 
+                    refresh = 0,
+                    seed = 9)
+fit_2  
+
 ```
+
 
