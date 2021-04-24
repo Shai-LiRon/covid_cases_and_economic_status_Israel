@@ -61,49 +61,70 @@ total_case_vax <- new_cases %>%
 # can use.
 
 vax_plot <- total_case_vax %>% 
-  # filter(date > as.Date("2020-12-01")) %>% 
+   filter(date > as.Date("2020-12-01")) %>% 
      pivot_longer(cols = c(first_dose, second_dose), 
                names_to = "type", values_to = "value") %>% 
   ggplot(aes(x = date,
              y = value,
              color = type)) + 
-  geom_line() +
-  theme_fivethirtyeight() +
+  geom_line(size=0.8) +
   scale_y_continuous(labels = scales::number_format(accuracy = 100)) +
   labs(title = "Number of Israelis Vaccinated: First and Second Dose",
+       subtitle = "Number of daily vaccinations increased less rapidly March",
        x = "Date",
-       y = "Number of Vaccinatated") +
+       y = "Number of Vaccinatated",
+       caption = "Source: Israel Ministry of Health") +
   geom_label(x=as.Date("2020-12-19"), y = -100, 
              label = "First Vaccines", color = "black", size = 2) +
   geom_label(x=as.Date("2021-03-19"), y = 4526000, 
              label = "50% of Population Vaccinated", color = "black", size = 2) +
-  scale_color_discrete(name = " ", labels = c("First Dose", "Second Dose"))
+  scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) +
+  theme_ipsum()
   
+
+vax_plot
+
 # FIX Y-axis  
 # Why are my x and y axis not showing?
 ```
 
+```{r}
+total_case_vax %>% 
+  write_csv("covid_vaccination_and_socioeconomic_status/final_data/total_case_vax.csv")
+```
+
 
 ```{r}
+
 new_case_plot <- total_case_vax %>% 
   ggplot(aes(x = date,
              y = new_cases)) + 
-  geom_line() +
-  labs(title = "Number of New Covid Cases",
+  geom_line(size=0.8, color=rgb(0.1, 0.6, 0.9, 1)) +
+  labs(title = "Daily Number of New Covid Cases in Israel",
+       subtitle = "Number of covid cases decreased when 50% of population was vaccinated",
        x = "Date",
-       y = "Number of Vaccinatated") +
-  theme_fivethirtyeight() 
+       y = "Daily Number of New Covid Cases",
+       caption = "Source: Israel Ministry of Health") +
+  theme_ipsum() +
+  geom_label(x=as.Date("2020-12-19"), y = 5000, 
+             label = "Vaccination Starts", color = "black", size = 2) +
+  geom_label(x=as.Date("2021-03-19"), y = -100, 
+             label = "50% Vaccinated", color = "black", size = 2) +
+  geom_label(x=as.Date("2021-02-09"), y = 6000, 
+             label = "25% Vaccinated", color = "black", size = 2)
+	
+new_case_plot
 
 ```
 
 
 ```{r}
-new_case_plot / vax_plot +
-  plot_annotation(title = "Number of New Covid Cases and Vaccinated in Israel",
-                  subtitle = "New Covid Cases Decreased when Vaccination Rate Increased",
-                  caption = "Source: Israel Ministry of Health") &
-  coord_cartesian(ylim = c(0, .035))
-
+# new_case_plot / vax_plot +
+#   plot_annotation(title = "Number of New Covid Cases and Vaccinated in Israel",
+#                   subtitle = "New Covid Cases Decreased when Vaccination Rate Increased",
+#                   caption = "Source: Israel Ministry of Health") &
+#   coord_cartesian(ylim = c(0, .035))
+# 
 
 ```
 
@@ -152,6 +173,9 @@ total_case_vax %>%
 
 # FIX AXIS 
 # Try to add color of line in the same as first dose and second dose.
+
+
+# vaccination starts, 50% vaccinated etc second shot.
 ```
 
 # Percetange vaccinated vs. Active cases - by city

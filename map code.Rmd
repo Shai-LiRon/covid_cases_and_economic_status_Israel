@@ -1,0 +1,43 @@
+---
+title: "map"
+author: "Shai-Li Ron"
+date: "4/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(maps)
+```
+
+```{r}
+
+mi_counties <- map_data(map="world",region=c("Israel", "Palestine")) %>% 
+  select(lon = long, lat, group, id = subregion)
+head(mi_counties)
+
+
+mi_counties <- map_data(map="world",region=c("Jerusalem")) %>% 
+  select(lon = long, lat, group, id = subregion)
+head(mi_counties)
+# 
+# mi_counties <- map_data(map="world", xlim=c(35.78730,35.56904	),ylim=c(32.73491	,32.61987)) %>% 
+#   select(lon = long, lat, group, id = subregion)
+# head(mi_counties)
+
+ggplot(mi_counties, aes(lon, lat)) + 
+  geom_point(size = .25, show.legend = FALSE) +
+  coord_quickmap()
+
+ggplot(mi_counties, aes(lon, lat, group = group)) +
+  geom_polygon(fill = "white", colour = "grey50") + 
+  coord_quickmap() + map.cities(country = "Israel")
+
+
+x <- map.cities(country = "Israel")
+
+
+
+```
+
