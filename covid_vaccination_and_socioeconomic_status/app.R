@@ -25,6 +25,7 @@ library(tidycensus)
 
 # total case vax data
 total_case_vax <- read_csv("final_data/total_case_vax.csv")
+perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
 
 ui <- fluidPage(theme = shinytheme("flatly"),
                 navbarPage(
@@ -61,17 +62,19 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                             
      )),
  
- tabPanel("Model",
+ tabPanel("Covid Cases",
           fluidPage(
-              titlePanel("Model Title"),
+              titlePanel("Covid Cases and Vaccination"),
               sidebarLayout(
                   sidebarPanel(
                       selectInput(
                           "plot_type",
                           "Plot Type",
-                          c("0-19 First Dose" = "a", "Total First Dose" = "b")
+                          c("New cases" = "new_cases", 
+                            "Vaccination" = "vaccine_plot",
+                            "Relationship" = "relation_plot")
                       )),
-                  mainPanel(imageOutput("map")))
+                  mainPanel(plotOutput("new_case_plot")))
           ))
  
  ),
@@ -81,14 +84,16 @@ ui <- fluidPage(theme = shinytheme("flatly"),
 tabPanel(
     "Covid Cases",
 
-        plotOutput("new_case_plot")
-    )
-)
+        
+    ))
+
 server <- function(input, output) {
+    total_case_vax <- read_csv("final_data/total_case_vax.csv") 
+    perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
         output$new_case_plot <- renderPlot({
             # Generate type based on input$plot_type from ui
-
-  
+            if (input$plot_type == "new_cases") {
+                total_case_vax <- read_csv("final_data/total_case_vax.csv")
                 total_case_vax %>% 
                     ggplot(aes(x = date,
                                y = new_cases)) + 
@@ -98,7 +103,6 @@ server <- function(input, output) {
                          x = "Date",
                          y = "Daily Number of New Covid Cases",
                          caption = "Source: Israel Ministry of Health") +
-                    theme_ipsum() +
                     geom_label(x=as.Date("2020-12-19"), y = 5000, 
                                label = "Vaccination Starts", color = "black", size = 2) +
                     geom_label(x=as.Date("2021-03-19"), y = -100, 
@@ -106,14 +110,67 @@ server <- function(input, output) {
                     geom_label(x=as.Date("2021-02-09"), y = 6000, 
                                label = "25% Vaccinated", color = "black", size = 2)
                 
-                 
+            }
+            else if (input$plot_type == "vaccine_plot") {
+                total_case_vax <- read_csv("final_data/total_case_vax.csv")
+                total_case_vax %>% 
+                    filter(date > as.Date("2020-12-01")) %>% 
+                    pivot_longer(cols = c(first_dose, second_dose), 
+                                 names_to = "type", values_to = "value") %>% 
+                    ggplot(aes(x = date,
+                               y = value,
+                               color = type)) + 
+                    geom_line(size=0.8) +
+                    scale_y_continuous(labels = scales::number_format(accuracy = 100)) +
+                    labs(title = "Number of Israelis Vaccinated: First and Second Dose",
+                         subtitle = "Number of daily vaccinations increased less rapidly March",
+                         x = "Date",
+                         y = "Number of Vaccinatated",
+                         caption = "Source: Israel Ministry of Health") +
+                    geom_label(x=as.Date("2020-12-19"), y = -100, 
+                               label = "First Vaccines", color = "black", size = 2) +
+                    geom_label(x=as.Date("2021-03-19"), y = 4526000, 
+                               label = "50% of Population Vaccinated", color = "black", size = 2) +
+                    scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) +
+                    theme_ipsum()
 
+            }
+            else if (input$plot_type == "relation_plot") {
+                perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
+                perc_vax_city %>% 
+                    mutate_at(vars(-c("city")), as.numeric) %>% 
+                    arrange(perc_first_dose) %>% 
+                    select(city, perc_second_dose, active_per_10000) %>% 
+                    ggplot(aes(x = perc_second_dose, 
+                               y = active_per_10000)) +
+                    geom_point() +
+                    geom_smooth(method = "lm", 
+                                formula = y ~ x) +
+                    labs(title = "Active Cases per 10,000 People and Vaccination Percentages",
+                         subtitle = "A negative relationship exists between active cases and vaccination percentage",
+                         x = "Percent Vaccinated Second Dose in Given City",
+                         y = "Number of Active Cases per 10,000 People in Given City",
+                         caption = "Source: Israel Health Ministry") +
+                    theme_ipsum()
+                
+            }
+            
+ 
  
    })
 }
 
 
 shinyApp(ui, server)
+
+
+
+
+
+
+
+
+
 
 
 

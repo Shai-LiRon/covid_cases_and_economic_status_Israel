@@ -91,6 +91,10 @@ vax_plot
 ```{r}
 total_case_vax %>% 
   write_csv("covid_vaccination_and_socioeconomic_status/final_data/total_case_vax.csv")
+
+perc_vax_city %>% 
+  write_csv("covid_vaccination_and_socioeconomic_status/final_data/perc_vax_city.csv")
+
 ```
 
 
@@ -221,7 +225,7 @@ perc_vax_city %>%
        x = "Percent Vaccinated Second Dose in Given City",
        y = "Number of Active Cases per 10,000 People in Given City",
        caption = "Source: Israel Health Ministry") +
-    theme_gray()
+    theme_ipsum()
 
 
 ```
