@@ -1,0 +1,12 @@
+name: covid_vaccination_Israel
+title: covid_vaccination_Israel
+username:
+account: shai-li
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4025703
+bundleId: 4519933
+url: https://shai-li.shinyapps.io/covid_vaccination_Israel/
+when: 1619432016.34317
+asMultiple: FALSE
+asStatic: FALSE

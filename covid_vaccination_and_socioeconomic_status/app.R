@@ -12,7 +12,6 @@ library(tidyverse)
 library(dplyr)
 library(janitor)
 library(primer.data)
-library(rstanarm)
 library(readxl)
 library(lubridate)
 library(ggthemes)
@@ -22,6 +21,13 @@ library(hrbrthemes)
 library(ggdist)
 library(shinythemes)
 library(tidycensus)
+library(maps)
+library(geojsonio)
+library(ggplot2)
+library(mapproj)
+library(leaflet)
+library(RColorBrewer)
+source("script_final.R")
 
 # total case vax data
 total_case_vax <- read_csv("final_data/total_case_vax.csv")
@@ -36,7 +42,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
     tabPanel(
      "Introduction",
                         
-    mainPanel(
+    
     h3("Learning from Covid Vaccinations in Israel"),
                             
     h5("Vaccines are the long-term solution to the Covid-19 pandemic, which has completely transformed \
@@ -58,9 +64,16 @@ ui <- fluidPage(theme = shinytheme("flatly"),
       policy makers and healthcare institions to be well informed and prepared for their country's \
       vaccination process. As you gear up with vaccines, I hope you find this page useful \
       to devise plans that ensure rapid widespread vaccination."),
-     h5("To ensure widespread Covid-19 vaccination, we need to pay close attention socio-economic disparities.")
-                            
-     )),
+     h5("To ensure widespread Covid-19 vaccination, we need to pay close attention socio-economic disparities."),
+    br(),
+    h3("Vaccination Percentages in Different Cities"),
+    leafletOutput("vax_map"),
+    br(),
+    h3("Active Cases in Different Cities"),
+    leafletOutput("active_map")
+    
+    
+     ),
  
  tabPanel("Covid Cases",
           fluidPage(
@@ -75,7 +88,41 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                             "Relationship" = "relation_plot")
                       )),
                   mainPanel(plotOutput("new_case_plot")))
-          ))
+          )),
+ 
+ tabPanel("Economic Model",
+          fluidPage(
+            titlePanel("Socio-Economic Status and Vaccination"),
+            sidebarLayout(
+              sidebarPanel(
+                selectInput(
+                  "real_predict",
+                  "Select Data or Prediction",
+                  c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
+                )),
+              mainPanel(imageOutput("economic")))
+          )),
+ 
+ tabPanel("About", 
+          titlePanel("About"),
+          h3("Background"),
+          h5("This project is about understanding how socio-economic disparities influence vaccination rates. \
+             Given the global widescaled impact of Covid-19, learning from different countries \
+             is essential to rapidly increase the vaccination rates. "),
+          h3("Data"),
+          h5("Data was provided by the Israeli Health Ministry"),
+          h3("Acknowledgements"),
+          h5("Thank you to Preceptor Kane, Jessica, and the rest of the GOV 1005 course staff for their assistance,\
+              paitence, and enthusiasm."),
+          h3("Author"),
+          h5("Shai-Li Ron is a student at Harvard College concetrating in economics. \
+            She has been living in Israel during the pandemic and she sees the data from the \
+            vaccination process in Israel as an opportunity to allow other countries to learn.
+                Email: shailiron@college.harvard.edu"),
+          h5("Github Repo:"), tags$a(href="https://github.com/Shai-LiRon/final_gov_project",
+                                     "https://github.com/Shai-LiRon/final_gov_project")
+ )
+ 
  
  ),
 
@@ -85,11 +132,25 @@ tabPanel(
     "Covid Cases",
 
         
-    ))
+    ),
+
+
+
+)
 
 server <- function(input, output) {
     total_case_vax <- read_csv("final_data/total_case_vax.csv") 
     perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
+ 
+    output$vax_map <- renderLeaflet(
+      
+      {vax_map}
+    )
+    
+    output$active_map <- renderLeaflet(
+      
+      {active_map}
+    )
         output$new_case_plot <- renderPlot({
             # Generate type based on input$plot_type from ui
             if (input$plot_type == "new_cases") {
@@ -131,8 +192,7 @@ server <- function(input, output) {
                                label = "First Vaccines", color = "black", size = 2) +
                     geom_label(x=as.Date("2021-03-19"), y = 4526000, 
                                label = "50% of Population Vaccinated", color = "black", size = 2) +
-                    scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) +
-                    theme_ipsum()
+                    scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) 
 
             }
             else if (input$plot_type == "relation_plot") {
@@ -150,14 +210,29 @@ server <- function(input, output) {
                          subtitle = "A negative relationship exists between active cases and vaccination percentage",
                          x = "Percent Vaccinated Second Dose in Given City",
                          y = "Number of Active Cases per 10,000 People in Given City",
-                         caption = "Source: Israel Health Ministry") +
-                    theme_ipsum()
+                         caption = "Source: Israel Health Ministry") 
                 
             }
             
  
  
    })
+        output$economic <- renderImage({
+          if(input$real_predict == "econ_plot"){            
+            list(
+              src = "econ_plot.png",
+              width = 500,
+              height = 500,
+              alt = "vaccination")
+          }                                        
+          else if(input$real_predict == "econ_model"){
+            list(
+              src = "econ_posterior.png",
+              width = 500,
+              height = 500,
+              alt = "Posterior")
+          }
+        })
 }
 
 

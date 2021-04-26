@@ -9,34 +9,105 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(maps)
+library(geojsonio)
+library(ggplot2)
+library(mapproj)
+library(leaflet)
+library(readxl)
 ```
 
 ```{r}
+
+perc_vax_city <- read_csv( "vax_econ_clean.csv") 
+perc_vax_city
+
+
+x=sprintf("/Users/SR/Downloads/israel-municipalities-polygons-master/%s/%s.geojson", "abu_gosh", "abu_gosh")
+spdf <- geojson_read(x,  what = "sp")
+
+
+spdf
+# 'fortify' the data to get a dataframe format required by ggplot2
+library(broom)
+spdf_fortified <- tidy(spdf)
+
+# Plot it
+
+ggplot() +
+  geom_polygon(data = spdf_fortified, aes( x = long, y = lat, group = group), fill="#69b3a2", color="white") +
+  theme_void() +
+  coord_map()
 
 mi_counties <- map_data(map="world",region=c("Israel", "Palestine")) %>% 
   select(lon = long, lat, group, id = subregion)
 head(mi_counties)
 
 
-mi_counties <- map_data(map="world",region=c("Jerusalem")) %>% 
-  select(lon = long, lat, group, id = subregion)
-head(mi_counties)
+# mi_counties <- map_data(map="world",region=c("Jerusalem")) %>% 
+#   select(lon = long, lat, group, id = subregion)
+# head(mi_counties)
 # 
 # mi_counties <- map_data(map="world", xlim=c(35.78730,35.56904	),ylim=c(32.73491	,32.61987)) %>% 
 #   select(lon = long, lat, group, id = subregion)
 # head(mi_counties)
 
-ggplot(mi_counties, aes(lon, lat)) + 
-  geom_point(size = .25, show.legend = FALSE) +
-  coord_quickmap()
+# ggplot(mi_counties, aes(lon, lat)) + 
+#   geom_point(size = .25, show.legend = FALSE) +
+#   coord_quickmap()
+# 
+# g <- ggplot(c(mi_counties,spdf_fortified), aes(lon, lat, group = group)) +
+#   geom_polygon(fill = "white", colour = "grey50")  +
+#   coord_map()
+#   
+# g+geom_polygon(data = spdf_fortified, aes( x = long, y = lat, group = group), fill="#69b3a2", color="white")
+# 
+# 
+# x <- map.cities(country = "Israel")
 
-ggplot(mi_counties, aes(lon, lat, group = group)) +
-  geom_polygon(fill = "white", colour = "grey50") + 
-  coord_quickmap() + map.cities(country = "Israel")
 
 
-x <- map.cities(country = "Israel")
+```
 
+```{r}
+
+cities <- read_excel("~/Desktop/ProjectsR/final_gov_project/geonames-all-cities-with-a-population-1000.xls")
+cities
+
+vax <- perc_vax_city %>% 
+  inner_join(cities, by = "city_eng") %>% 
+  rename("vax_rate" = perc_second_dose) %>% 
+  mutate_at(vars("lat","long"), as.numeric) 
+
+vax %>% 
+  write_csv("covid_vaccination_and_socioeconomic_status/final_data/vax.csv")
+
+vax <- head(vax)
+# Create a color palette with handmade bins.
+mybins <- seq(0, 100, by=20)
+mypalette <- colorBin( palette="YlOrBr", domain=vax$vax, na.color="transparent", bins=mybins)
+
+# Prepare the text for the tooltip:
+mytext <- paste(
+   "city: ", vax$city, "<br/>", 
+   "vax rate: ", vax$vax_rate, sep="") %>%
+  lapply(htmltools::HTML)
+
+# Final Map
+x <- leaflet(vax) %>% 
+  addTiles()  %>% 
+  setView( lat= 34.85, lng=31.04 , zoom=6) %>%
+  addProviderTiles("Esri.WorldImagery") %>%
+  addCircleMarkers(~long, ~lat, 
+    fillColor = ~mypalette(vax_rate), fillOpacity = 0.7, color="white", radius=~vax_rate/10, stroke=FALSE,
+    label = mytext,
+    labelOptions = labelOptions( style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "13px", direction = "auto")
+  ) %>%
+  addLegend( pal=mypalette, values=~vax_rate, opacity=0.9, title = "Magnitude", position = "bottomright" )
+
+x 
+#save the widget in a html file if needed.
+library(htmlwidgets)
+saveWidget(x, file="~/Desktop/ProjectsR/final_gov_project/bubblemapQuakes.html")
 
 
 ```
