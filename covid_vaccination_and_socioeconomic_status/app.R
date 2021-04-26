@@ -91,17 +91,47 @@ ui <- fluidPage(theme = shinytheme("flatly"),
           )),
  
  tabPanel("Economic Model",
-          fluidPage(
-            titlePanel("Socio-Economic Status and Vaccination"),
-            sidebarLayout(
-              sidebarPanel(
-                selectInput(
-                  "real_predict",
-                  "Select Data or Prediction",
-                  c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
-                )),
-              mainPanel(imageOutput("economic")))
-          )),
+      sidebarPanel(h3("Understanding how socio-economic rank affects city vaccination rate:"),
+      p("This page explores the connection between socio-economic 
+        rank of different cities in Israel and the percent of vaccinated citizens. 
+        The socio-economic rank is measured on a scale of 1 to 10 
+        (the highest rank, richest cities, are 10).
+        This achieved through the allocation of local authorities into 10 
+        homogeneous groups which are not equally sized. This is done by means 
+        of cluster analysis, so that the variance within clusters
+        is minimized and the variance between clusters is maximized."),
+      p("The first graph displays the actual data, showing a clear relationship 
+      between the socio-economic ranks of different cities and the vaccination 
+      percentages in those cities.", strong("The higher the socio-economic cluster rank, 
+      the higher the percentage of vaccinated citizens."), "I then modeled this
+      relationship using a regression to predict the vaccination rates for cities
+      for which no data is available.")),
+      br(),
+      plotOutput("econ_plot"),
+          # fluidPage(
+          #   titlePanel("Socio-Economic Status and Vaccination"),
+          #   sidebarLayout(
+          #     sidebarPanel(
+          #       selectInput(
+          #         "real_predict",
+          #         "Select Data or Prediction",
+          #         c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
+          #       )),
+          #     mainPanel(imageOutput("economic"))),
+            br(),
+            br(),
+            br(),
+            br(),
+            p(" to rate",
+              strong("People in countries where the percent of agreement 
+                                 with the statements is higher tend feel less control
+                                 and freedom to make life choices."), "This trend
+                          is observed in both genders."),
+            p("The Equation for the Regression Model:"),
+            withMathJax('$$ Percent_Vaccinated_i = \\beta_0 + \\beta_1Economic_Rank +
+                           \\epsilon_i $$')
+            
+          ),
  
  tabPanel("About", 
           titlePanel("About"),
@@ -145,6 +175,10 @@ server <- function(input, output) {
     output$vax_map <- renderLeaflet(
       
       {vax_map}
+    )
+    
+    output$econ_plot <- renderPlot(
+      {econ_status_plot}
     )
     
     output$active_map <- renderLeaflet(
@@ -217,93 +251,39 @@ server <- function(input, output) {
  
  
    })
-        output$economic <- renderImage({
-          if(input$real_predict == "econ_plot"){            
-            list(
-              src = "econ_plot.png",
-              width = 500,
-              height = 500,
-              alt = "vaccination")
-          }                                        
-          else if(input$real_predict == "econ_model"){
-            list(
-              src = "econ_posterior.png",
-              width = 500,
-              height = 500,
-              alt = "Posterior")
-          }
-        })
+        
+
+        
+        # output$economic <- renderImage({
+        #   if(input$real_predict == "econ_plot"){            
+        #     list(
+        #       src = "econ_plot.png",
+        #       width = 500,
+        #       height = 500,
+        #       alt = "vaccination")
+        #   }                                        
+        #   else if(input$real_predict == "econ_model"){
+        #     list(
+        #       src = "econ_posterior.png",
+        #       width = 500,
+        #       height = 500,
+        #       alt = "Posterior")
+        #   }
+        # })
 }
 
 
 shinyApp(ui, server)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Draw the histogram with the specified number of bins
-#         
-#         hist(x, col = 'darkgray', border = 'white')
-#     })
-# }
-
-
-
-# ui <- navbarPage(
-#     "Final Project Title",
-#     tabPanel("Model",
-#              fluidPage(
-#                  titlePanel("Model Title"),
-#                  sidebarLayout(
-#                      sidebarPanel(
-#                          selectInput(
-#                              "plot_type",
-#                              "Plot Type",
-#                              c("Option A" = "a", "Option B" = "b")
-#                          )),
-#                      mainPanel(plotOutput("line_plot")))
-#              )),
-#     tabPanel("Discussion",
-#              titlePanel("Discussion Title"),
-#              p("Tour of the modeling choices you made and 
-#               an explanation of why you made them")),
-#     tabPanel("About", 
-#              titlePanel("About"),
-#              h3("Project Background and Motivations"),
-#              p("Hello, this is where I talk about my project."),
-#              h3("About Me"),
-#              p("My name is ______ and I study ______. 
-#              You can reach me at ______@college.harvard.edu.")))
-# 
-# server <- function(input, output) {
-#     output$line_plot <- renderPlot({
-#         # Generate type based on input$plot_type from ui
-#         
-#         ifelse(
-#             input$plot_type == "a",
-#             
-#             # If input$plot_type is "a", plot histogram of "waiting" column 
-#             # from the faithful dataframe
-#             
-#             x   <- faithful[, 2],
-#             
-#             # If input$plot_type is "b", plot histogram of "eruptions" column
-#             # from the faithful dataframe
-#             
-#             x   <- faithful[, 1]
-#         )
-#         
-#         # Draw the histogram with the specified number of bins
-#         
-#         hist(x, col = 'darkgray', border = 'white')
+# tabPanel("Economic Model",
+#          fluidPage(
+#            titlePanel("Socio-Economic Status and Vaccination"),
+#            sidebarLayout(
+#              sidebarPanel(
+#                selectInput(
+#                  "real_predict",
+#                  "Select Data or Prediction",
+#                  c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
+#                )),
+#              mainPanel(imageOutput("economic"))),
+#            br(),

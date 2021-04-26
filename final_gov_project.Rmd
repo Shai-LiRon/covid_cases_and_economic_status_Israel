@@ -18,6 +18,7 @@ library(patchwork)
 library(ggplot2)
 library(hrbrthemes)
 library(ggdist)
+library(gt)
 
 ```
 
@@ -262,9 +263,13 @@ econ_plot <- vax_econ_clean %>%
        caption = "Source: Israel Health Ministry") +
   geom_smooth(method = "lm", 
               formula = y ~ x) +
-  scale_color_gradient(low="blue", high="red") 
+  scale_color_gradient(low="blue", high="red") + 
+  theme_classic()
                       
 ggsave("econ_plot.png", econ_plot)
+
+
+econ_plot 
 ```
 
 # Predictive Model: Percent vaccinated in relation to socio economic rank
@@ -289,6 +294,10 @@ fit_1 <- stan_glm(data = vax_econ_clean,
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
     theme_classic()
 
+ fit_1
+ 
+ 
+ 
 ```
 
 ```{r}
@@ -363,6 +372,10 @@ data_map %>%
   write_csv("covid_vaccination_and_socioeconomic_status/final_data/data_map.csv")
 
 data_map
+city_info
+```
+
+```{r}
 city_info
 ```
 
