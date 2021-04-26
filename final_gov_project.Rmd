@@ -280,22 +280,29 @@ fit_1 <- stan_glm(data = vax_econ_clean,
                     family = gaussian, 
                     refresh = 0,
                     seed = 9)
- fit_1 %>% 
-   as_tibble() %>% 
+color_fit_general <- rgb(0.1, 0.6, 0.9, 1)
+
+# General model showing the percent vaccinated relative to the city rank. 
+# I needed to make sure that I include a relevant color spectrum to make it 
+# look nicer. 
+
+general_posterior <- fit_1 %>% 
+  as_tibble() %>% 
   rename(mu = `(Intercept)`) %>% 
   ggplot(aes(x = mu)) +
-    geom_histogram(aes(y = after_stat(count/sum(count))), 
-                   bins = 100) +
-    labs(title = "Posterior Distribution for Percentage of Vaccinated",
-         subtitle = "The model predicts around 32% vaccinated in any randomly selected city",
-         x = "Percent Vaccinated Second Dose",
-         y = "Probability",
-         caption = "Data source: Israel Health Ministry") +
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-    theme_classic()
+  geom_histogram(aes(y = after_stat(count/sum(count))), 
+                 bins = 100,
+                 fill = color_fit_general) +
+  labs(title = "Posterior Distribution for Percentage of Vaccinated",
+       subtitle = "The model predicts around 32% vaccinated in any randomly selected city",
+       x = "Percent Vaccinated Second Dose",
+       y = "Probability",
+       caption = "Source: Israel Health Ministry") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme_classic()
 
- fit_1
- 
+ general_posterior 
+ggsave("covid_vaccination_and_socioeconomic_status/general_posterior.png", general_posterior)
  
  
 ```
@@ -319,12 +326,13 @@ econ_posterior <- pp_10 %>%
       stat_halfeye(aes(fill = stat(cut_cdf_qi(cdf, .width = c(0.95, 1)))),
                show.legend = FALSE) +
   scale_fill_calc() +
-  labs(title = "Posterior for Percentage Vaccinated in Cities of Different Socio-Economic Status",
+  labs(title = "Posterior: Percentage Vaccinated in Cities of Different Economic Status",
        subtitle = "Cities of higher socio-economic Status have higher vaccination percentages",
        x = "Percent of Vaccinated in City",
        y = "Socio-Economic Status of City",
        caption = "Source: Israel Heatlh Ministry") +
-  scale_x_continuous(breaks = c(0,10,20,30,40,50,60,70,80,90,100))
+  scale_x_continuous(breaks = c(0,10,20,30,40,50,60,70,80,90,100)) +
+  theme_classic()
   
  ggsave("econ_posterior.png", econ_posterior) 
 ```
@@ -371,11 +379,7 @@ data_map <- perc_vax_city %>%
 data_map %>% 
   write_csv("covid_vaccination_and_socioeconomic_status/final_data/data_map.csv")
 
-data_map
-city_info
+
 ```
 
-```{r}
-city_info
-```
 

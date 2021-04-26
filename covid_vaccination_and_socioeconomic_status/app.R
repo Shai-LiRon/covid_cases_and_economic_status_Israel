@@ -28,6 +28,7 @@ library(mapproj)
 library(leaflet)
 library(RColorBrewer)
 source("script_final.R")
+source("r_code.R")
 
 # total case vax data
 total_case_vax <- read_csv("final_data/total_case_vax.csv")
@@ -91,7 +92,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
           )),
  
  tabPanel("Economic Model",
-      sidebarPanel(h3("Understanding how socio-economic rank affects city vaccination rate:"),
+     titlePanel("Socio-Economic Status and Vaccination"),
+     h3("How does socio-economic rank affect city vaccination rate?"),
       p("This page explores the connection between socio-economic 
         rank of different cities in Israel and the percent of vaccinated citizens. 
         The socio-economic rank is measured on a scale of 1 to 10 
@@ -103,35 +105,19 @@ ui <- fluidPage(theme = shinytheme("flatly"),
       p("The first graph displays the actual data, showing a clear relationship 
       between the socio-economic ranks of different cities and the vaccination 
       percentages in those cities.", strong("The higher the socio-economic cluster rank, 
-      the higher the percentage of vaccinated citizens."), "I then modeled this
+      the higher the percentage of vaccinated citizens."), "I modeled this
       relationship using a regression to predict the vaccination rates for cities
-      for which no data is available.")),
+      for which no data is available."),
       br(),
       plotOutput("econ_plot"),
-          # fluidPage(
-          #   titlePanel("Socio-Economic Status and Vaccination"),
-          #   sidebarLayout(
-          #     sidebarPanel(
-          #       selectInput(
-          #         "real_predict",
-          #         "Select Data or Prediction",
-          #         c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
-          #       )),
-          #     mainPanel(imageOutput("economic"))),
-            br(),
-            br(),
-            br(),
-            br(),
-            p(" to rate",
-              strong("People in countries where the percent of agreement 
-                                 with the statements is higher tend feel less control
-                                 and freedom to make life choices."), "This trend
-                          is observed in both genders."),
-            p("The Equation for the Regression Model:"),
-            withMathJax('$$ Percent_Vaccinated_i = \\beta_0 + \\beta_1Economic_Rank +
-                           \\epsilon_i $$')
-            
-          ),
+     p("The Equation for the Regression Model:"),
+     withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_Rank +
+                           \\epsilon_i $$'),
+     br(),
+     imageOutput("general_posterior")
+
+      ),
+        
  
  tabPanel("About", 
           titlePanel("About"),
@@ -173,19 +159,27 @@ server <- function(input, output) {
     perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
  
     output$vax_map <- renderLeaflet(
-      
       {vax_map}
     )
     
-    output$econ_plot <- renderPlot(
-      {econ_status_plot}
-    )
     
     output$active_map <- renderLeaflet(
-      
       {active_map}
     )
-        output$new_case_plot <- renderPlot({
+    
+    output$econ_plot <- renderPlot(
+      {econ_vax_rate_plot}
+    )
+    
+    output$general_posterior <- renderImage({
+          list(
+             src = "econ_posterior.png",
+             width = 500,
+             height = 500,
+             alt = "econ_posterior")
+    })
+      
+    output$new_case_plot <- renderPlot({
             # Generate type based on input$plot_type from ui
             if (input$plot_type == "new_cases") {
                 total_case_vax <- read_csv("final_data/total_case_vax.csv")
@@ -254,22 +248,7 @@ server <- function(input, output) {
         
 
         
-        # output$economic <- renderImage({
-        #   if(input$real_predict == "econ_plot"){            
-        #     list(
-        #       src = "econ_plot.png",
-        #       width = 500,
-        #       height = 500,
-        #       alt = "vaccination")
-        #   }                                        
-        #   else if(input$real_predict == "econ_model"){
-        #     list(
-        #       src = "econ_posterior.png",
-        #       width = 500,
-        #       height = 500,
-        #       alt = "Posterior")
-        #   }
-        # })
+  
 }
 
 
@@ -287,3 +266,21 @@ shinyApp(ui, server)
 #                )),
 #              mainPanel(imageOutput("economic"))),
 #            br(),
+
+
+# output$economic <- renderImage({
+#   if(input$real_predict == "econ_plot"){            
+#     list(
+#       src = "econ_plot.png",
+#       width = 500,
+#       height = 500,
+#       alt = "vaccination")
+#   }                                        
+#   else if(input$real_predict == "econ_model"){
+#     list(
+#       src = "econ_posterior.png",
+#       width = 500,
+#       height = 500,
+#       alt = "Posterior")
+#   }
+# })
