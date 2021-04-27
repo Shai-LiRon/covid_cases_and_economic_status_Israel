@@ -42,7 +42,9 @@ vax_map <- leaflet(vax) %>%
     addLegend(pal=mypalette, values=~vax_rate, opacity=0.9, title = "Percent Vaccinated", position = "bottomright" )
   
 vax_map
-# radius=~vax_rate/5
+# I chose a relevant color palette. I also made sure I had all my data ordered
+# nicely in terms of names of the cities when observing their vaccination rate.
+# I can also maybe add socio-economic rank cluster. 
 
 
 # CODE FOR MAP ACTIVE CASES

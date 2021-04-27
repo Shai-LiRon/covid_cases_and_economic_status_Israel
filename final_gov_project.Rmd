@@ -5,6 +5,8 @@ date: "4/13/2021"
 output: html_document
 ---
 
+# This file was where I created my models that I later used inside the rscript.
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(dplyr)
@@ -84,21 +86,21 @@ vax_plot <- total_case_vax %>%
   theme_ipsum()
   
 
-vax_plot
-
-# FIX Y-axis  
-# Why are my x and y axis not showing?
+# This plot represemts Number of Israelis Vaccinated: First and Second Dose
 ```
 
 ```{r}
 total_case_vax %>% 
   write_csv("covid_vaccination_and_socioeconomic_status/final_data/total_case_vax.csv")
 
-
+# I needed to write this data as a csv file so I could use it in r script.
 ```
 
 
 ```{r}
+# I created a plot for new cases, meeded to make it look good using color scheme
+# and other elements.
+
 
 new_case_plot <- total_case_vax %>% 
   ggplot(aes(x = date,
@@ -117,8 +119,7 @@ new_case_plot <- total_case_vax %>%
   geom_label(x=as.Date("2021-02-09"), y = 6000, 
              label = "25% Vaccinated", color = "black", size = 2)
 	
-new_case_plot
-
+# This plot is of Daily Number of New Covid Cases in Israel
 ```
 
 
@@ -175,17 +176,17 @@ total_case_vax %>%
              label = "50% Vaccinated", color = "black", size = 2)
   
 
-# FIX AXIS 
-# Try to add color of line in the same as first dose and second dose.
-
-
-# vaccination starts, 50% vaccinated etc second shot.
+# I still need to fix the axis.  
+# I chose not to use this plot as two axis graphs can be mis-leading.
+# This is a graph of new covid cases and vaccination in Israel.
 ```
 
 # Percetange vaccinated vs. Active cases - by city
 ```{r}
-# The first data set we will look at is the most recent data set for the percentage of vaccinated per city. 
-# Loading vaccinated by city
+# The first data set we will look at is the most recent data set for the
+# percentage of vaccinated per city. 
+# Loading vaccinated by city:
+
 vax_by_city_age <- read_excel(path = "Raw_data/total_bycity.xls") 
 perc_vax_city2 <- read_excel(path = "raw_data/perc_city.xlsx")
 city_econ <- read_excel(path = "raw_data/econ_status_city.xlsx")
@@ -197,6 +198,9 @@ city_econ <- read_excel(path = "raw_data/econ_status_city.xlsx")
 ```
 
 ```{r}
+
+# I considered using age as a parameter, but decided against it, because 
+# availability differed for differen age groups.
 
 vax_by_city_age %>% 
   clean_names() %>% 
@@ -242,11 +246,17 @@ clean_perc_vax_city <- perc_vax_city2 %>%
 
 
 ```{r}
+# This investigates the relationship between socio-economic standard and the 
+# vaccination percentage in different cities. 
+
 vax_econ_clean <- city_econ %>% 
   clean_names() %>% 
   group_by(city) %>% 
   full_join(clean_perc_vax_city, by = "city") %>% 
   mutate("rank2017" = as.numeric(cluster_2017_4))
+
+# I merged the data sets and I also needed this as a csv to use in my final
+# r script.
 
 vax_econ_clean %>% 
   write_csv("vax_econ_clean.csv")
@@ -269,8 +279,8 @@ econ_plot <- vax_econ_clean %>%
                       
 ggsave("econ_plot.png", econ_plot)
 
-
-econ_plot 
+# Initially I though I would add this as an image. I figured it would look 
+# better as an actual plot.
 ```
 
 # Predictive Model: Percent vaccinated in relation to socio economic rank
@@ -305,6 +315,9 @@ general_posterior <- fit_1 %>%
  general_posterior 
 ggsave("covid_vaccination_and_socioeconomic_status/general_posterior.png", general_posterior)
  
+
+# this is a general posterior probability distribution. Because it doesn't look
+# as nice or tell us something relevant I chose not to use it in the end.
  
 ```
 
@@ -342,7 +355,9 @@ econ_posterior <- pp_10 %>%
 city_econ_clean <- city_econ %>% 
   clean_names() 
 
-# Fit_2 needs organized data for the different districts socio-econ status and the vaccination percentage.
+# Fit_2 needs organized data for the different districts socio-econ status and 
+# the vaccination percentage.
+
 
 data_fit_2 <- clean_perc_vax_city %>%
   select(city, active_per_10000, perc_second_dose) %>% 
@@ -357,19 +372,22 @@ fit_2 <- stan_glm(data = data_fit_2,
                     family = gaussian, 
                     refresh = 0,
                     seed = 9)
-fit_2  
 
+# I chose not to use this model as it was not very accurate or useful because
+# it was difficult to measure in a standard method the percentage of sick.
 ```
 
 ```{r}
-# Building the data for the map
+# Building the data for the map:
 
 cities <- read_excel("~/Desktop/ProjectsR/final_gov_project/geonames-all-cities-with-a-population-1000.xls")
 
-cities
+
 city_info <- read_excel("raw_data/city_names.xlsx")
 city_names <- city_info %>% 
   select(city_code, city, city_eng)
+
+# I merged using capital letter english names, available in both datasets.
 
  perc_vax_city2 %>% 
   inner_join(city_names, by = "city") %>% 

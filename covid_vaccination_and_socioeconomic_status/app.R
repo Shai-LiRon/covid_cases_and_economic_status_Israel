@@ -29,11 +29,7 @@ library(RColorBrewer)
 source("script_final.R")
 source("r_code.R")
 
-# total case vax data
-# total_case_vax <- read_csv("final_data/total_case_vax.csv")
-# perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
-# perc_vax_city <- read_csv("final_data/perc_vax_city.csv")  
-# total_case_vax <- read_csv("final_data/total_case_vax.csv") 
+
 
 ui <- fluidPage(theme = shinytheme("flatly"),
                 navbarPage(
@@ -105,40 +101,131 @@ ui <- fluidPage(theme = shinytheme("flatly"),
         is minimized and the variance between clusters is maximized."),
       p("The first graph displays the actual data, showing a clear relationship 
       between the socio-economic ranks of different cities and the vaccination 
-      percentages in those cities.", strong("The higher the socio-economic cluster rank, 
-      the higher the percentage of vaccinated citizens."), "I modeled this
-      relationship using a regression to predict the vaccination rates for cities
-      for which no data is available."),
+      percentages in those cities.", strong("The higher the socio-economic 
+      cluster rank, the higher the percentage of vaccinated citizens."), 
+      "I modeled this relationship using a regression to predict the vaccination 
+      rates for cities for which no data is available."),
       br(),
       plotOutput("econ_plot"),
      p("The Equation for the Regression Model:"),
-     withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_Rank +
+     withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_/Rank +
                            \\epsilon_i $$'),
      br(),
-     imageOutput("general_posterior", width="600px")
+     fluidRow(
+       column(8,
+              imageOutput("general_posterior", 
+                          width = "600px")),
+       column(4,
+              p("This is a model for the percent of vaccinated in any given city,
+              given its socio-economic rank.", strong("Cities with a higher
+              socioeconomic rank were predicted to have higher vaccination 
+              percentages."), "For example, cities with in the socio-economic 
+              rank cluster 10, are predicted to have a median of around 75% 
+              vaccinated. Cities with a socio economic cluster rank of 5 are 
+              predicted to have aound 53% vaccinated. Cities with rank 1 will 
+              only have a median of around 36% vaccinated. The dark blue part of 
+              the plot represents the likely outcome as it is within the 95%
+              confidence interval, while the red part is the standard error. 
+              The model is useful in predicting the vaccination rates in cities of 
+       different socio-economic ranks in Israel. The population is representative
+       of cities in Israel for which we do not have data. While each city differs
+       in certain characteristics, all cities in Israel have the same healthcare 
+       options and so it is reasonable to assume that everyone had access to
+       vaccines. We can learn that that there is a very clear relationship between
+       the economic rank of cities and the vaccination percentages. This model can
+       be used to predict vaccination percentages in cities for which we do not 
+       have vaccinaiton data but know socio-economic rank. It is not representative 
+       of other countries, as there is great variation and many other factors that 
+       should be taken into account (e.g. healthcare system, education etc.), 
+       however it is possible to learn from this trend and prepare for such
+       discrepancies in other countries undergoing vaccination process currently.")),
+       br(),
+       h3("Discussion:"),
+       p("The model is limited by a number of factors which are not included. 
+       Such as the distance to a vaccination center might vary between cities.
+       It is important to consider that perhaps some individuals had to
+       commute further to obtain a vaccine. For example, in the Negev area (south
+       of Israel) where there are many Beduin towns, there are fewer healthcare 
+       centers, which could have been a factor causing smaller vaccination rates. 
+       For example, Umm Batim and Hura, Bedouin towns in the Southern District 
+       of Israel, have the lowest vaccination rates. However, Kfar Habad, a Jewish 
+       orthodox town where there is a vaccination center also had significantly
+       low vaccination rates. Perhaps another factor that needs to be considered
+       is the level of education in those areas and the relationship between 
+       minority population vaccination rates. Futhemore, the data used is from 
+       the beginning of April, when the rate of vaccination in Israel decreased 
+       substantially. It is therefore resonable to assume that by this stage 
+       most Israeli's who wanted to get vaccinated 
+       had done so. However, it is important to consider that perhaps people who
+       live in areas with a low socio-economic rank got vaccinated at a later 
+       stage, which is perhaps a limitation of the model as the vaccination 
+       process is still occuring. Nonetheless, since the rate of vaccination
+       has slowed substantially, this is a limitation but does not invalide the 
+       model."),
+       h3("Conclusions:"),
+       p("It is clear that there is a relationship between the socio-economic
+       rank of cities and the vaccination percentage. However, given the fact that
+       vaccinations were free and available to all, socio-economic standard may 
+       exhibit a situation of a third variable problem. Perhaps the common 
+       correlation between the socio-economic standard and vaccination percentages 
+       of cities can be explained by factors such as education, distance to 
+       vaccination center or by the type of population, e.g. minority groups. 
+       These factors deserve further study. Nonetheless it is clear that countries
+       seeking to have maximal population vaccination rapidly need to consider 
+       other factors apart from obtaining vaccines. Clearly, there are differences
+       between vaccination percentages and socio-economic rank is a good measure
+       to predict where fewer people will get vaccinated. Though, there can be a 
+       large number of causes that lead cities with a lower economic standard to 
+       have a smaller percentage of vaccination. To try and eliminate these 
+       problems countries should consider making the vaccines as cheap as possible
+       so that everyone can afford them, educating the population on the safety
+       of these vaccines, ensuring minimcal beurocratic procedures and proximity
+        of vaccination centers.")
+       
+     )
+     
 
       ),
         
  
  tabPanel("About", 
-          titlePanel("About"),
+          # titlePanel("About"),
           h3("Background"),
-          h5("This project is about understanding how socio-economic disparities influence vaccination rates. \
-             Given the global widescaled impact of Covid-19, learning from different countries \
-             is essential to rapidly increase the vaccination rates. "),
+          h5("This project is about understanding how socio-economic disparities
+          influence vaccination rates.  Given the global widescale impact of 
+          Covid-19, learning from different countries is essential to rapidly 
+          increase the vaccination rates. I was particularly interested in this
+          topic because I've seen the negative impact of covid-19 on my community
+          and followed the news closely to learn about how different countries 
+          overcame the pandemic. Living in Israel allowed me to observe the
+          vaccination of the population and to experience first hand the 
+          normalization of life post pandemic. However, I was surprised to hear
+          that there was vast differences in the vaccination rates of cities, 
+          while availability was the same in all areas in Israel. There were
+          people who despite the great suffering of the pandemic were choosing not
+          to get vaccinated, particularly in areas where the socio-economic rank
+          was relatively lower. This sparked my interest for the subject and 
+          given my general interest in economics I decided I want to investigate 
+          this relationship using data-science."),
           h3("Data"),
-          h5("Data was provided by the Israeli Health Ministry. The data used was a number of diverse \
-          datasets, including vaccinaiton rate, socio-economic standard data and data on vaccination by day."),
+          h5("Data was provided by the Israeli Health Ministry. The data 
+          included a number of different datasets: general Israeli vaccinaiton 
+          rates, city socio-economic standard data, Israeli vaccination by day 
+          data and a dataset with coordinates of different Israeli cities for
+          the maps."),
           h3("Acknowledgements"),
-          h5("Thank you to Preceptor Kane, Jessica, and the rest of the GOV 1005 course staff for their assistance,\
-              paitence, and enthusiasm."),
+          h5("Thank you to Preceptor Kane, Jessica, Shaked and the rest of the 
+          GOV 1005 course for their assistance, paitence, and enthusiasm."),
           h3("Author"),
-          h5("Shai-Li Ron is a student at Harvard College concetrating in economics. \
-            She has been living in Israel during the pandemic and she sees the data from the \
-            vaccination process in Israel as an opportunity to allow other countries to learn.
+          h5("Shai-Li Ron is a student at Harvard College concetrating in 
+          economics. She has been living in Israel during the pandemic and saw
+          this project as an opportunity to analyse data in Hebrew on the 
+          vaccination process in Israel to allow other countries to learn from
+          the challanges Israel faced in fighting the pandemic with vaccines.
                 Email: shailiron@college.harvard.edu"),
-          h5("Github Repo:"), tags$a(href="https://github.com/Shai-LiRon/final_gov_project",
-                                     "https://github.com/Shai-LiRon/final_gov_project")
+          h5("Github Repo:"), 
+          tags$a(href="https://github.com/Shai-LiRon/final_gov_project",
+                              "https://github.com/Shai-LiRon/final_gov_project")
  )
  
  
@@ -213,34 +300,3 @@ shinyApp(ui, server)
 
 
 
-
-# tabPanel("Economic Model",
-#          fluidPage(
-#            titlePanel("Socio-Economic Status and Vaccination"),
-#            sidebarLayout(
-#              sidebarPanel(
-#                selectInput(
-#                  "real_predict",
-#                  "Select Data or Prediction",
-#                  c("Actual Data" = "econ_plot", "Prediction" = "econ_model")
-#                )),
-#              mainPanel(imageOutput("economic"))),
-#            br(),
-
-
-# output$economic <- renderImage({
-#   if(input$real_predict == "econ_plot"){            
-#     list(
-#       src = "econ_plot.png",
-#       width = 500,
-#       height = 500,
-#       alt = "vaccination")
-#   }                                        
-#   else if(input$real_predict == "econ_model"){
-#     list(
-#       src = "econ_posterior.png",
-#       width = 500,
-#       height = 500,
-#       alt = "Posterior")
-#   }
-# })

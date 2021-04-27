@@ -5,8 +5,8 @@ account: shai-li
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4025703
-bundleId: 4524098
+bundleId: 4524602
 url: https://shai-li.shinyapps.io/covid_vaccination_Israel/
-when: 1619509160.55251
+when: 1619519861.72449
 asMultiple: FALSE
 asStatic: FALSE

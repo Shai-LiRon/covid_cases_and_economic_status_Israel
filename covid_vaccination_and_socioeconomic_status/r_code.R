@@ -48,6 +48,7 @@ econ_vax_rate_plot <- vax_econ_clean1 %>%
 
 # _____________________________________________________________________________
 
+# this plots the relationship between economic rank and vaccination percentages.
 
 relationship_plot <- perc_vax_city1 %>% 
   mutate_at(vars(-c("city")), as.numeric) %>% 
@@ -67,6 +68,8 @@ relationship_plot <- perc_vax_city1 %>%
 # _____________________________________________________________________________
 
 total_case_vax <- read_csv("final_data/total_case_vax.csv") 
+
+# this plots the daily vaccination, of first and second dose. 
 
 vaccine_plot <- total_case_vax %>% 
   filter(date > as.Date("2020-12-01")) %>% 
@@ -89,6 +92,8 @@ vaccine_plot <- total_case_vax %>%
   scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) 
 
 # _____________________________________________________________________________
+
+# this plots the daily number of new cases over time.
 
 new_cases <- total_case_vax %>% 
   ggplot(aes(x = date,
