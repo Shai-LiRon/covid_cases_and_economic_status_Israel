@@ -9,7 +9,6 @@
 
 library(shiny)
 library(tidyverse)
-library(dplyr)
 library(janitor)
 library(primer.data)
 library(readxl)
@@ -31,8 +30,10 @@ source("script_final.R")
 source("r_code.R")
 
 # total case vax data
-total_case_vax <- read_csv("final_data/total_case_vax.csv")
-perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
+# total_case_vax <- read_csv("final_data/total_case_vax.csv")
+# perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
+# perc_vax_city <- read_csv("final_data/perc_vax_city.csv")  
+# total_case_vax <- read_csv("final_data/total_case_vax.csv") 
 
 ui <- fluidPage(theme = shinytheme("flatly"),
                 navbarPage(
@@ -114,7 +115,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
      withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_Rank +
                            \\epsilon_i $$'),
      br(),
-     imageOutput("general_posterior")
+     imageOutput("general_posterior", width="600px")
 
       ),
         
@@ -126,7 +127,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
              Given the global widescaled impact of Covid-19, learning from different countries \
              is essential to rapidly increase the vaccination rates. "),
           h3("Data"),
-          h5("Data was provided by the Israeli Health Ministry"),
+          h5("Data was provided by the Israeli Health Ministry. The data used was a number of diverse \
+          datasets, including vaccinaiton rate, socio-economic standard data and data on vaccination by day."),
           h3("Acknowledgements"),
           h5("Thank you to Preceptor Kane, Jessica, and the rest of the GOV 1005 course staff for their assistance,\
               paitence, and enthusiasm."),
@@ -155,8 +157,8 @@ tabPanel(
 )
 
 server <- function(input, output) {
-    total_case_vax <- read_csv("final_data/total_case_vax.csv") 
-    perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
+
+   
  
     output$vax_map <- renderLeaflet(
       {vax_map}
@@ -182,64 +184,15 @@ server <- function(input, output) {
     output$new_case_plot <- renderPlot({
             # Generate type based on input$plot_type from ui
             if (input$plot_type == "new_cases") {
-                total_case_vax <- read_csv("final_data/total_case_vax.csv")
-                total_case_vax %>% 
-                    ggplot(aes(x = date,
-                               y = new_cases)) + 
-                    geom_line(size=0.8, color=rgb(0.1, 0.6, 0.9, 1)) +
-                    labs(title = "Daily Number of New Covid Cases in Israel",
-                         subtitle = "Number of covid cases decreased when 50% of population was vaccinated",
-                         x = "Date",
-                         y = "Daily Number of New Covid Cases",
-                         caption = "Source: Israel Ministry of Health") +
-                    geom_label(x=as.Date("2020-12-19"), y = 5000, 
-                               label = "Vaccination Starts", color = "black", size = 2) +
-                    geom_label(x=as.Date("2021-03-19"), y = -100, 
-                               label = "50% Vaccinated", color = "black", size = 2) +
-                    geom_label(x=as.Date("2021-02-09"), y = 6000, 
-                               label = "25% Vaccinated", color = "black", size = 2)
-                
+              {new_cases}
             }
             else if (input$plot_type == "vaccine_plot") {
-                total_case_vax <- read_csv("final_data/total_case_vax.csv")
-                total_case_vax %>% 
-                    filter(date > as.Date("2020-12-01")) %>% 
-                    pivot_longer(cols = c(first_dose, second_dose), 
-                                 names_to = "type", values_to = "value") %>% 
-                    ggplot(aes(x = date,
-                               y = value,
-                               color = type)) + 
-                    geom_line(size=0.8) +
-                    scale_y_continuous(labels = scales::number_format(accuracy = 100)) +
-                    labs(title = "Number of Israelis Vaccinated: First and Second Dose",
-                         subtitle = "Number of daily vaccinations increased less rapidly March",
-                         x = "Date",
-                         y = "Number of Vaccinatated",
-                         caption = "Source: Israel Ministry of Health") +
-                    geom_label(x=as.Date("2020-12-19"), y = -100, 
-                               label = "First Vaccines", color = "black", size = 2) +
-                    geom_label(x=as.Date("2021-03-19"), y = 4526000, 
-                               label = "50% of Population Vaccinated", color = "black", size = 2) +
-                    scale_color_discrete(name = "Vaccine Dose", labels = c("First Dose", "Second Dose")) 
-
+                
+              {vaccine_plot}
+              
             }
             else if (input$plot_type == "relation_plot") {
-                perc_vax_city <- read_csv("final_data/perc_vax_city.csv")
-                perc_vax_city %>% 
-                    mutate_at(vars(-c("city")), as.numeric) %>% 
-                    arrange(perc_first_dose) %>% 
-                    select(city, perc_second_dose, active_per_10000) %>% 
-                    ggplot(aes(x = perc_second_dose, 
-                               y = active_per_10000)) +
-                    geom_point() +
-                    geom_smooth(method = "lm", 
-                                formula = y ~ x) +
-                    labs(title = "Active Cases per 10,000 People and Vaccination Percentages",
-                         subtitle = "A negative relationship exists between active cases and vaccination percentage",
-                         x = "Percent Vaccinated Second Dose in Given City",
-                         y = "Number of Active Cases per 10,000 People in Given City",
-                         caption = "Source: Israel Health Ministry") 
-                
+              {relationship_plot}
             }
             
  
@@ -253,6 +206,13 @@ server <- function(input, output) {
 
 
 shinyApp(ui, server)
+
+
+
+
+
+
+
 
 # tabPanel("Economic Model",
 #          fluidPage(

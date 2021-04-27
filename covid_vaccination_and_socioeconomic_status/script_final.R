@@ -1,6 +1,5 @@
 
 library(tidyverse)
-library(dplyr)
 library(janitor)
 library(primer.data)
 library(readxl)
@@ -40,7 +39,7 @@ vax_map <- leaflet(vax) %>%
                      label = mytext,
                      labelOptions = labelOptions( style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "13px", direction = "auto")
     ) %>%
-    addLegend( pal=mypalette, values=~vax_rate, opacity=0.9, title = "Percent Vaccinated", position = "bottomright" )
+    addLegend(pal=mypalette, values=~vax_rate, opacity=0.9, title = "Percent Vaccinated", position = "bottomright" )
   
 vax_map
 # radius=~vax_rate/5

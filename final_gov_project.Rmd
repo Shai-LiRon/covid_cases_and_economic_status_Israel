@@ -187,11 +187,12 @@ total_case_vax %>%
 # The first data set we will look at is the most recent data set for the percentage of vaccinated per city. 
 # Loading vaccinated by city
 vax_by_city_age <- read_excel(path = "Raw_data/total_bycity.xls") 
-perc_vax_city <- read_excel(path = "raw_data/perc_city.xlsx")
+perc_vax_city2 <- read_excel(path = "raw_data/perc_city.xlsx")
 city_econ <- read_excel(path = "raw_data/econ_status_city.xlsx")
 
-perc_vax_city %>% 
-  write_csv("covid_vaccination_and_socioeconomic_status/final_data/perc_vax_city.csv")
+ perc_vax_city2 %>% 
+   select(-active_cases) %>% 
+   write_csv("covid_vaccination_and_socioeconomic_status/final_data/perc_vax_city.csv")
 
 ```
 
@@ -210,7 +211,7 @@ vax_by_city_age %>%
 
 # active_per_10000 vs. percent vaccinated
 ```{r}
-perc_vax_city %>% 
+perc_vax_city2 %>% 
    mutate_at(vars(-c("city")), as.numeric) %>% 
    arrange(perc_first_dose) %>% 
 
@@ -235,7 +236,7 @@ perc_vax_city %>%
 
 
 ```{r}
-clean_perc_vax_city <- perc_vax_city %>% 
+clean_perc_vax_city <- perc_vax_city2 %>% 
    mutate_at(vars(-c("city")), as.numeric)  
 ```
 
@@ -370,11 +371,12 @@ city_info <- read_excel("raw_data/city_names.xlsx")
 city_names <- city_info %>% 
   select(city_code, city, city_eng)
 
-data_map <- perc_vax_city %>% 
+ perc_vax_city2 %>% 
   inner_join(city_names, by = "city") %>% 
   inner_join(cities, by = "city_eng") %>% 
   rename("vax_rate" = perc_second_dose) %>% 
-  rename("active" = active_per_10000)
+  rename("active" = active_per_10000) %>% 
+  select(city, vax_rate, active, lat, long, city2, Coordinates)
 
 data_map %>% 
   write_csv("covid_vaccination_and_socioeconomic_status/final_data/data_map.csv")
