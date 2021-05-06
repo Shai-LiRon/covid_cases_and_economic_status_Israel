@@ -122,17 +122,6 @@ new_case_plot <- total_case_vax %>%
 # This plot is of Daily Number of New Covid Cases in Israel
 ```
 
-
-```{r}
-# new_case_plot / vax_plot +
-#   plot_annotation(title = "Number of New Covid Cases and Vaccinated in Israel",
-#                   subtitle = "New Covid Cases Decreased when Vaccination Rate Increased",
-#                   caption = "Source: Israel Ministry of Health") &
-#   coord_cartesian(ylim = c(0, .035))
-# 
-
-```
-
 ```{r}
 # Trying to plot this with two different axis
 
@@ -197,21 +186,6 @@ city_econ <- read_excel(path = "raw_data/econ_status_city.xlsx")
 
 ```
 
-```{r}
-
-# I considered using age as a parameter, but decided against it, because 
-# availability differed for differen age groups.
-
-vax_by_city_age %>% 
-  clean_names() %>% 
-  mutate_at(vars(-c("city")), as.numeric) %>%  
-  
-# Any indefinite value of <15 was ignored - replaced by NA
-  
-  group_by(city) %>%
-  mutate(total = sum(x16_19, x20_29, x30_39, x40_49, x50_59, x60_69, x70_79, x80_89, x90))
-
-```
 
 # active_per_10000 vs. percent vaccinated
 ```{r}
@@ -382,6 +356,9 @@ fit_2 <- stan_glm(data = data_fit_2,
 
 cities <- read_excel("~/Desktop/ProjectsR/final_gov_project/geonames-all-cities-with-a-population-1000.xls")
 
+fixed_cities <- cities %>% 
+  clean_names() %>% 
+  select(city_eng, name, lat, long, population, coordinates, city2)
 
 city_info <- read_excel("raw_data/city_names.xlsx")
 city_names <- city_info %>% 
@@ -389,16 +366,18 @@ city_names <- city_info %>%
 
 # I merged using capital letter english names, available in both datasets.
 
- perc_vax_city2 %>% 
+data_map <- perc_vax_city2 %>% 
   inner_join(city_names, by = "city") %>% 
-  inner_join(cities, by = "city_eng") %>% 
+  inner_join(fixed_cities, by = "city_eng") %>% 
   rename("vax_rate" = perc_second_dose) %>% 
   rename("active" = active_per_10000) %>% 
-  select(city, vax_rate, active, lat, long, city2, Coordinates)
+  select(city, vax_rate, active, lat, long, city2)
 
+# I had to go back several times and fix certain city names that kept being 
+# deleted.
+  
 data_map %>% 
-  write_csv("covid_vaccination_and_socioeconomic_status/final_data/data_map.csv")
-
+  write_csv("covid_vaccination_and_socioeconomic_status/final_data/data2_map.csv")
 
 ```
 

@@ -18,6 +18,8 @@ library(readxl)
 
 ```{r}
 
+# This page is experimental work with maps. 
+
 perc_vax_city <- read_csv( "vax_econ_clean.csv") 
 perc_vax_city
 

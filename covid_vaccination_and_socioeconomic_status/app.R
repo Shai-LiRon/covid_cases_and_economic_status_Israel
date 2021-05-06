@@ -26,8 +26,8 @@ library(ggplot2)
 library(mapproj)
 library(leaflet)
 library(RColorBrewer)
-source("script_final.R")
-source("r_code.R")
+source("plot_code.R")
+source("map_code.R")
 
 
 
@@ -90,7 +90,6 @@ ui <- fluidPage(theme = shinytheme("flatly"),
  
  tabPanel("Economic Model",
      titlePanel("Socio-Economic Status and Vaccination"),
-     h3("How does socio-economic rank affect city vaccination rate?"),
       p("This page explores the connection between socio-economic 
         rank of different cities in Israel and the percent of vaccinated citizens. 
         The socio-economic rank is measured on a scale of 1 to 10 
@@ -99,17 +98,6 @@ ui <- fluidPage(theme = shinytheme("flatly"),
         homogeneous groups which are not equally sized. This is done by means 
         of cluster analysis, so that the variance within clusters
         is minimized and the variance between clusters is maximized."),
-      p("The first graph displays the actual data, showing a clear relationship 
-      between the socio-economic ranks of different cities and the vaccination 
-      percentages in those cities.", strong("The higher the socio-economic 
-      cluster rank, the higher the percentage of vaccinated citizens."), 
-      "I modeled this relationship using a regression to predict the vaccination 
-      rates for cities for which no data is available."),
-      br(),
-      plotOutput("econ_plot"),
-     p("The Equation for the Regression Model:"),
-     withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_/Rank +
-                           \\epsilon_i $$'),
      br(),
      fluidRow(
        column(8,
@@ -121,12 +109,17 @@ ui <- fluidPage(theme = shinytheme("flatly"),
               socioeconomic rank were predicted to have higher vaccination 
               percentages."), "For example, cities with in the socio-economic 
               rank cluster 10, are predicted to have a median of around 75% 
-              vaccinated. Cities with a socio economic cluster rank of 5 are 
-              predicted to have aound 53% vaccinated. Cities with rank 1 will 
-              only have a median of around 36% vaccinated. The dark blue part of 
-              the plot represents the likely outcome as it is within the 95%
-              confidence interval, while the red part is the standard error. 
-              The model is useful in predicting the vaccination rates in cities of 
+              vaccinated. Whereas cities with rank 1 will 
+              only have a median of around 36% vaccinated. This means that the 
+              highest ranked cities have more than double percentage of vaccinated
+              than the lowest ranked cities. The model tells us that when we 
+              compare 2 cities, which differ in their socioeconomic by 1, the higher
+              ranked city will have approximately 5% more vaccination percentage.
+              The dark blue part of the plot represents the likely outcome as 
+              it is within the 95% confidence interval, while the red part is 
+              the standard error. ")),
+       br(),
+       p("The model is useful in predicting the vaccination rates in cities of 
        different socio-economic ranks in Israel. The population is representative
        of cities in Israel for which we do not have data. While each city differs
        in certain characteristics, all cities in Israel have the same healthcare 
@@ -138,7 +131,20 @@ ui <- fluidPage(theme = shinytheme("flatly"),
        of other countries, as there is great variation and many other factors that 
        should be taken into account (e.g. healthcare system, education etc.), 
        however it is possible to learn from this trend and prepare for such
-       discrepancies in other countries undergoing vaccination process currently.")),
+       discrepancies in other countries undergoing vaccination process currently."),
+       h3("How the model was developed:"),
+       br(),
+      p("The second graph displays the raw data, showing a clear relationship 
+      between the socio-economic ranks of different cities and the vaccination 
+      percentages in those cities.", strong("The higher the socio-economic 
+      cluster rank, the higher the percentage of vaccinated citizens."), 
+      "I modeled this relationship using a regression to predict the vaccination 
+      rates for cities for which no data is available."),
+      br(),
+      plotOutput("econ_plot"),
+     p("The Equation for the Regression Model:"),
+     withMathJax('$$ Percent_/Vaccinated_i = \\beta_0 + \\beta_1Economic_/Rank +
+                           \\epsilon_i $$'),
        br(),
        h3("Discussion:"),
        p("The model is limited by a number of factors which are not included. 
